@@ -1,1 +1,10 @@
 venv/
+.venv/
+__pycache__/
+**/__pycache__/
+bin/
+lib/
+.env
+.vercel
+**/__pycache__
+**/site-packages

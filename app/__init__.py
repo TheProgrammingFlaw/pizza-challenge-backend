@@ -1,24 +1,26 @@
+import os
+import json
 from flask import Flask
 from flask_cors import CORS
 from firebase_admin import credentials, firestore, initialize_app
-from .config import Config
 from .socket_config import socketio
-
 
 def create_app():
     app = Flask(__name__)
 
-    # Allow cors and initialise web sockets
     CORS(app)
     socketio.init_app(app, cors_allowed_origins="*")
+    firebase_credentials_path = os.getenv("FIREBASE_CREDENTIALS")
+    if not firebase_credentials_path or not os.path.exists(firebase_credentials_path):
+        raise FileNotFoundError("Service account key file not found. Check FIREBASE_CREDENTIALS environment variable.")
 
-    # Initialize Firebase
-    app.config.from_object(Config)
-    cred = credentials.Certificate(app.config['FIREBASE_CREDENTIALS'])
+    with open(firebase_credentials_path, 'r') as f:
+        cred_dict = json.load(f)
+
+    cred = credentials.Certificate(cred_dict)
     initialize_app(cred)
     app.db = firestore.client()
 
-    # Register blueprints
     from .routes.user_routes import user_bp
     from .routes.user_transaction_routes import transaction_bp
     from .routes.config_routes import config_bp
